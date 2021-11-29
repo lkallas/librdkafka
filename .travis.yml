@@ -42,9 +42,9 @@ matrix:
     - name: "OSX GCC"
       os: osx
       compiler: gcc
-      env: LINKAGE=std HOMEBREW_NO_AUTO_UPDATE=1
+      env: LINKAGE=std
       before_script:
-        - ./configure --install-deps --source-deps-only --disable-lz4-ext --prefix="$PWD/dest" --enable-strip
+        - ./configure --install-deps --disable-lz4-ext --prefix="$PWD/dest" --enable-werror --enable-strip
 
     - name: "OSX clang: +static"
       os: osx
@@ -73,20 +73,6 @@ matrix:
       before_script:
         - ./packaging/mingw-w64/configure-build-msys2-mingw-static.sh
         - ./packaging/mingw-w64/run-tests.sh
-
-    - name: "Linux GCC: +integration-tests +copyright-check +doc-check +devel +code-cov +c99 +c++98"
-      os: linux
-      dist: xenial
-      compiler: gcc
-      env: NO_ARTIFACTS=y RUN_INTEGRATION_TESTS=y COPYRIGHT_CHECK=y DOC_CHECK=y
-      before_script:
-        - wget -O rapidjson-dev.deb https://launchpad.net/ubuntu/+archive/primary/+files/rapidjson-dev_1.1.0+dfsg2-3_all.deb
-        - sudo dpkg -i rapidjson-dev.deb
-        - sudo pip3 install -r tests/requirements.txt
-        - sudo apt update
-        - sudo apt install -y doxygen graphviz gdb
-        - ./configure --CFLAGS="-std=c99" --CXXFLAGS="-std=c++98" --install-deps --enable-devel --disable-lz4-ext --prefix="$PWD/dest"
-        - ./packaging/tools/rdutcoverage.sh
 
     - name: "Linux GCC arm64: +static -gssapi"
       os: linux
@@ -130,3 +116,6 @@ script:
   - if [[ $DOC_CHECK == y ]]; then make docs || travis_terminate 1 ; fi
   - if [[ -z $TRAVIS_TAG && $RUN_INTEGRATION_TESTS == y ]]; then (cd tests && travis_retry ./interactive_broker_version.py -c "make quick" 2.7.0) || travis_terminate 1 ; fi
   - if [[ -f tests/core ]] && (which gdb >/dev/null); then (cd tests && LD_LIBRARY_PATH=../src:../src-cpp gdb ./test-runner core < backtrace.gdb) ; fi
+
+after_success:
+  - ./deploy.sh
