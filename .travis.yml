@@ -39,41 +39,6 @@ matrix:
       before_script:
         - ./configure --enable-static --install-deps --source-deps-only --disable-gssapi --disable-lz4-ext --prefix="$PWD/dest" --enable-strip
 
-    - name: "OSX GCC"
-      os: osx
-      compiler: gcc
-      env: LINKAGE=std
-      before_script:
-        - ./configure --install-deps --disable-lz4-ext --prefix="$PWD/dest" --enable-werror --enable-strip
-
-    - name: "OSX clang: +static"
-      os: osx
-      compiler: clang
-      env: LINKAGE=static HOMEBREW_NO_AUTO_UPDATE=1
-      before_script:
-        - ./configure --install-deps --source-deps-only --disable-lz4-ext --prefix="$PWD/dest" --enable-static --enable-strip
-
-    - name: "Windows MinGW-w64 Dynamic"
-      os: windows
-      env:
-        - LINKAGE=std
-        - SKIP_MAKE=y
-      before_install:
-        - source ./packaging/mingw-w64/travis-before-install.sh
-      before_script:
-        - ./packaging/mingw-w64/configure-build-msys2-mingw.sh
-
-    - name: "Windows MinGW-w64 Static"
-      os: windows
-      env:
-        - LINKAGE=static
-        - SKIP_MAKE=y
-      before_install:
-        - source ./packaging/mingw-w64/travis-before-install.sh
-      before_script:
-        - ./packaging/mingw-w64/configure-build-msys2-mingw-static.sh
-        - ./packaging/mingw-w64/run-tests.sh
-
     - name: "Linux GCC arm64: +static -gssapi"
       os: linux
       arch: arm64
@@ -110,7 +75,7 @@ script:
   # No tag: Run unit tests.
   - if [[ $SKIP_MAKE != y && $RUN_INTEGRATION_TESTS != y ]]; then if [[ -n $TRAVIS_TAG ]]; then make -C tests run_local_quick; else make -C tests unit ; fi ; fi
   - if [[ $SKIP_MAKE != y ]]; then make install || travis_terminate 1 ; fi
-  - if [[ -z $NO_ARTIFACTS ]]; then (cd dest && tar cvzf ../artifacts/librdkafka-${CC}__bid-${TRAVIS_JOB_NUMBER}.tar.gz .) ; fi
+  - if [[ -z $NO_ARTIFACTS ]]; then (cd dest && tar cvzf ../artifacts/p-librdkafka__bld-travis__plat-${TRAVIS_OS_NAME}__arch-${TRAVIS_CPU_ARCH}__tag-${TRAVIS_TAG}__sha-${TRAVIS_COMMIT}__bid-${TRAVIS_JOB_NUMBER}/librdkafka-${CC}.tar.gz .) ; fi
   - if [[ -n $TRAVIS_TAG ]]; then for distro in $ADDITIONAL_BUILDS ; do packaging/tools/distro-build.sh $distro --enable-strip || travis_terminate 1 ; done ; fi
   - if [[ $COPYRIGHT_CHECK == y ]]; then make copyright-check || travis_terminate 1; fi
   - if [[ $DOC_CHECK == y ]]; then make docs || travis_terminate 1 ; fi
