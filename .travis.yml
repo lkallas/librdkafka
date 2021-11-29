@@ -48,20 +48,10 @@ matrix:
       before_script:
         - ./configure --disable-gssapi --install-deps --source-deps-only --enable-static --disable-lz4-ext --prefix="$PWD/dest" --enable-strip
 
-    - name: "Linux GCC s390x: +devel"
-      os: linux
-      arch: s390x
-      dist: bionic
-      compiler: gcc
-      env: NO_ARTIFACTS=y
-      before_script:
-        - sudo apt install -y gdb
-        - ./configure --enable-devel --disable-lz4-ext --prefix="$PWD/dest"
-
 install:
   - ccache -s || echo "CCache is not available."
   - rm -rf artifacts dest
-  - mkdir dest artifacts
+  - mkdir dest artifacts/p-librdkafka__bld-travis__plat-${TRAVIS_OS_NAME}__arch-${TRAVIS_CPU_ARCH}__tag-${TRAVIS_TAG}__sha-${TRAVIS_COMMIT}__bid-${TRAVIS_JOB_NUMBER}
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo apt update || true; fi
   - if [[ $TRAVIS_DIST == "trusty" || $TRAVIS_DIST == "xenial" ]]; then sudo apt-get install -y libssl1.0.0 libssl-dev ; fi
   - if [[ $TRAVIS_DIST == "bionic" || $TRAVIS_DIST == "focal" ]]; then sudo apt-get install -y libssl1.1 libssl-dev ; fi
